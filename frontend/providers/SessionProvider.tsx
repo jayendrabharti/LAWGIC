@@ -1,6 +1,8 @@
 "use client";
 
 import getUser from "@/auth/getUser";
+import ApiClient from "@/utils/ApiClient";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useContext,
@@ -10,6 +12,7 @@ import {
   SetStateAction,
   Dispatch,
 } from "react";
+import { toast } from "sonner";
 
 export interface SessionContextType {
   user: User | null;
@@ -17,6 +20,7 @@ export interface SessionContextType {
   error: string | null;
   refreshSession: () => Promise<void>;
   setUser: Dispatch<SetStateAction<User | null>>;
+  logOut: (redirect?: boolean) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType>({
@@ -25,12 +29,15 @@ const SessionContext = createContext<SessionContextType>({
   error: null,
   refreshSession: async () => {},
   setUser: () => {},
+  logOut: async (redirect: boolean = false) => {},
 });
 
 export default function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionContextType["user"]>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<SessionContextType["status"]>("loading");
+
+  const router = useRouter();
 
   const fetchSession = async () => {
     setUser(null);
@@ -47,15 +54,30 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         console.log("User not found");
-       
+
         setStatus("unauthenticated");
-         console.log("Session status: unauthenticated");
+        console.log("Session status: unauthenticated");
       }
     } catch (error) {
       console.error("Failed to fetch session:", error);
       setError("Failed to fetch session");
       setUser(null);
       setStatus("unauthenticated");
+    }
+  };
+
+  const logOut = async (redirect: boolean = false) => {
+    const { data } = await ApiClient.post("/auth/logout");
+    if (data.success) {
+      setUser(null);
+      setError(null);
+      setStatus("unauthenticated");
+      toast.success("Signed out !!");
+      if (redirect) {
+        router.push("/login");
+      }
+    } else {
+      toast.error("Error signing out");
     }
   };
 
@@ -69,6 +91,7 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
     error,
     refreshSession: fetchSession,
     setUser,
+    logOut,
   };
 
   return (

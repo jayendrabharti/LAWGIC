@@ -1,6 +1,10 @@
 "use client";
 import RevealHero from "@/components/animations/RevealHero";
-import AddDocument from "@/components/documents/AddDocument";
+import dynamic from "next/dynamic";
+
+const AddDocument = dynamic(() => import("@/components/documents/AddDocument"), { 
+  ssr: false 
+});
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";

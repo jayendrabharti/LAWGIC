@@ -15,7 +15,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,34 +71,6 @@ interface TextSelection {
  * @returns {JSX.Element} The PDF viewer component
  */
 export default function PdfViewer({ className = "" }: { className?: string }) {
-  // ========================================
-  // WORKER INITIALIZATION CHECK
-  // ========================================
-  
-  const [workerReady, setWorkerReady] = useState(false);
-
-  // Ensure PDF.js worker is properly initialized
-  useEffect(() => {
-    const initializeWorker = async () => {
-      try {
-        // Check if worker is already configured
-        if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-          console.warn("PDF.js worker not configured, setting fallback");
-          pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-        }
-        
-        // Wait a brief moment for worker to initialize
-        await new Promise(resolve => setTimeout(resolve, 100));
-        setWorkerReady(true);
-      } catch (error) {
-        console.error("Failed to initialize PDF worker:", error);
-        setWorkerReady(true); // Still try to render
-      }
-    };
-    
-    initializeWorker();
-  }, []);
-
   // ========================================
   // STATE MANAGEMENT
   // ========================================
@@ -593,8 +565,8 @@ export default function PdfViewer({ className = "" }: { className?: string }) {
     };
   }, []);
 
-  // Early return with loading state if worker not ready or essential data missing
-  if (!workerReady || !pdfUrl) {
+  // Early return with loading state if essential data missing
+  if (!pdfUrl) {
     return (
       <div className={cn("flex-1 overflow-auto", className)}>
         <div className="flex h-full items-center justify-center">

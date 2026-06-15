@@ -12,13 +12,25 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy - required for Cloud Run / reverse proxies
+// so that req.secure and cookie secure flag work correctly
+app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 6900;
+
+const allowedOrigins = process.env.CLIENT_BASE_URL
+  ? process.env.CLIENT_BASE_URL.split(",").map((o) => o.trim())
+  : [];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      return callback(null, origin);
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
     },
     credentials: true,
   })

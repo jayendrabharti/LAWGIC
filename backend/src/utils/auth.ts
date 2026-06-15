@@ -15,6 +15,8 @@ export const refreshTokenExpiry = "7d";
 // --- Environment ---
 const isProduction = process.env.NODE_ENV === "production";
 
+console.log(`🍪 Cookie config: NODE_ENV=${process.env.NODE_ENV}, isProduction=${isProduction}, sameSite=${isProduction ? "none" : "lax"}, secure=${isProduction}`);
+
 // --- Cookie Configurations ---
 export const accessTokenCookieOptions: CookieOptions = {
   httpOnly: true,

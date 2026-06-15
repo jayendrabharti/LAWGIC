@@ -1,5 +1,7 @@
 "use client";
 
+import "@/pdf/pdfjs-setup";
+
 import {
   Sheet,
   SheetContent,

@@ -2,32 +2,25 @@
 import { Loader2Icon, LogOutIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { Button } from "../ui/button";
-import ApiClient from "@/utils/ApiClient";
-import { useRouter } from "next/navigation";
+import { useSession } from "@/providers/SessionProvider";
 
 export default function SignOutButton({
   className = "",
-  type = "redirect",
+  redirect = false,
 }: {
   className?: string;
-  type?: "redirect" | "refresh";
+  redirect?: boolean;
 }) {
-  const router = useRouter();
+  const { logOut } = useSession();
+
   const [signingOut, startSignOut] = useTransition();
 
   return (
     <Button
       onClick={() => {
         startSignOut(async () => {
-          await ApiClient.post("/auth/logout");
-          toast.success("Signed out !!");
-          if (type === "refresh") {
-            router.refresh();
-          } else {
-            router.push("/login");
-          }
+          await logOut(redirect);
         });
       }}
       disabled={signingOut}
