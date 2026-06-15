@@ -1,22 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  webpack: (config: any) => {
-    // Handle PDF.js worker properly for Next.js 15
+  webpack: (config: any, { dev, isServer }: any) => {
     config.resolve.alias = {
-      ...config.resolve.alias,
+      ...(config.resolve.alias || {}),
       canvas: false,
     };
-    
-    // Ensure worker files are treated as assets
-    config.module.rules.push({
-      test: /pdf\.worker\.(min\.)?mjs$/,
-      type: 'asset/resource',
-      generator: {
-        filename: 'static/worker/[hash][ext][query]'
-      }
-    });
-    
+
+    // pdfjs-dist can crash in Next/Webpack dev mode with eval source maps.
+    // Use normal source maps for the browser bundle.
+    if (dev && !isServer) {
+      config.devtool = "source-map";
+    }
+
     return config;
   },
   images: {
@@ -27,15 +23,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: `byte-us-dev-bucket.s3.ap-south-1.amazonaws.com`,
+        hostname: "byte-us-dev-bucket.s3.ap-south-1.amazonaws.com",
       },
       {
         protocol: "https",
-        hostname: `lawgic-backend-684404792129.asia-south2.run.app`,
+        hostname: "lawgic-backend-684404792129.asia-south2.run.app",
       },
       {
         protocol: "http",
-        hostname: `localhost`,
+        hostname: "localhost",
         port: "6900",
       },
     ],

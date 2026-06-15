@@ -246,64 +246,31 @@ export default function PdfThreats() {
    * Now calculates actual positions using text-finding logic
    */
   const convertBackendThreatToHighlight = (threat: any): Highlight => {
-    // Debug: Log the threat data structure
-    console.log('🔍 THREATS: Converting backend threat to highlight:', {
-      id: threat.id,
-      exactStringThreat: threat.exactStringThreat,
-      text: threat.text,
-      page: threat.page,
-      position: threat.position,
-      hasPosition: !!threat.position,
-      positionType: typeof threat.position,
-      positionKeys: threat.position ? Object.keys(threat.position) : [],
-    });
-
-    // CRITICAL: Check what page number we're actually using
-    const pageNumber = threat.page || 1;
-    console.log(`🔍 THREATS: Page number determination - threat.page: ${threat.page}, fallback used: ${!threat.page}, final pageNumber: ${pageNumber}`);
-    
-    if (!threat.page) {
-      console.error(`❌ THREATS: No page number provided in threat data! Using fallback page 1`);
-      console.log('🔍 THREATS: Full threat object:', JSON.stringify(threat, null, 2));
-    }
-
-    // Calculate actual position if we have the text layer available
-    let calculatedPosition = {
-      startOffset: 0,
-      endOffset: 0,
-      pageNumber: pageNumber,
-      startPageOffset: 0,
-      endPageOffset: 0,
-    };
-
-    console.log('🔍 THREATS: Initial calculated position:', calculatedPosition);
-
-    // Try to calculate position if text layer is available and threat has cached position
-    if (threat.position && typeof threat.position === 'object' && threat.position.startOffset !== undefined) {
-      console.log('🔍 THREATS: Using cached position from backend');
-      // Use cached position from database
-      calculatedPosition = {
-        startOffset: Number(threat.position.startOffset) || 0,
-        endOffset: Number(threat.position.endOffset) || 0,
-        pageNumber: Number(threat.position.pageNumber) || Number(threat.page) || 1,
-        startPageOffset: Number(threat.position.startPageOffset) || 0,
-        endPageOffset: Number(threat.position.endPageOffset) || 0,
-      }; 
-    }
+    const pageNumber = threat.page || threat.pageNumber || threat.position?.pageNumber || 1;
+    const text = threat.exactStringThreat || threat.text || "";
 
     return {
-      id: threat.id,
-      text: threat.exactStringThreat || threat.text || '',
-      position: calculatedPosition,
-      color: getThreatColor(),
+      id: threat.id || `threat-${pageNumber}-${text.slice(0, 24)}`,
+      text,
+      position: {
+        startOffset: 0,
+        endOffset: text.length,
+        pageNumber,
+        startPageOffset: 0,
+        endPageOffset: text.length,
+      },
+      color: getThreatColor(threat.severity),
       metadata: {
-        id: threat.id,
-        text: threat.exactStringThreat || threat.text || '',
-        note: threat.explanation,
-        tags: ["threat", "security", threat.severity?.toLowerCase() || "high"],
+        id: threat.id || `threat-${pageNumber}-${text.slice(0, 24)}`,
+        text,
+        note: threat.explanation || threat.reason || "",
+        tags: ["threat", threat.severity?.toLowerCase() || "high"],
         createdAt: new Date().toISOString(),
         author: "threat-analyzer",
-        needsPositionCalculation: !threat.position || threat.position.startOffset === undefined,
+        needsPositionCalculation: false,
+        threatSeverity: threat.severity,
+        threatType: "detected",
+        explanation: threat.explanation || threat.reason || "",
       },
       isActive: false,
       isTemporary: false,
@@ -1197,8 +1164,12 @@ export default function PdfThreats() {
   /**
    * Gets the appropriate color for threat severity - all threats use red
    */
-  const getThreatColor = (): HighlightColor => {
-    // All threats use the same red color regardless of severity
+  const getThreatColor = (severity?: string): HighlightColor => {
+    const normalized = severity?.toLowerCase();
+    if (normalized === "critical") return THREAT_COLORS[0];
+    if (normalized === "high") return THREAT_COLORS[1] || THREAT_COLORS[0];
+    if (normalized === "medium") return THREAT_COLORS[2] || THREAT_COLORS[0];
+    if (normalized === "low") return THREAT_COLORS[3] || THREAT_COLORS[0];
     return THREAT_COLORS[0];
   };
 

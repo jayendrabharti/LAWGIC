@@ -386,6 +386,12 @@ export const DEFAULT_HIGHLIGHT_COLOR = DEFAULT_HIGHLIGHT_COLORS[0];
  * Gets the appropriate color for a threat - all threats use red color
  */
 export const getThreatColor = (severity?: string): HighlightColor => {
-  // All threats use the same red color regardless of severity
+  const normalized = severity?.toLowerCase();
+
+  if (normalized === "critical") return THREAT_COLORS[0];
+  if (normalized === "high") return THREAT_COLORS[1] || THREAT_COLORS[0];
+  if (normalized === "medium") return THREAT_COLORS[2] || THREAT_COLORS[0];
+  if (normalized === "low") return THREAT_COLORS[3] || THREAT_COLORS[0];
+
   return THREAT_COLORS[0];
 };

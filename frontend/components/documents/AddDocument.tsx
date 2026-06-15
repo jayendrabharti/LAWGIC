@@ -33,7 +33,6 @@ import { z } from "zod";
 import { useState, useRef, useCallback } from "react";
 import ApiClient from "@/utils/ApiClient";
 import { toast } from "sonner";
-import { pdfjs } from "react-pdf";
 import { AnimatePresence, motion } from "motion/react";
 
 // Note: PDF.js worker is configured in PdfProvider.tsx to avoid conflicts
@@ -88,6 +87,12 @@ export default function AddDocument({
     setIsProcessingPdf(true);
     try {
       const fileUrl = URL.createObjectURL(file);
+      const { pdfjs } = await import("react-pdf");
+
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
 
       // Load PDF document
       const pdf = await pdfjs.getDocument(fileUrl).promise;

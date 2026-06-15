@@ -655,14 +655,14 @@ export default function PdfViewer({ className = "" }: { className?: string }) {
                   key={i + 1}
                   ref={setPageRef(i + 1)}
                   data-page-number={i + 1}
-                  className="mx-auto p-10"
+                  className="relative mx-auto p-10"
                 >
                   <Page
                     pageIndex={i}
                     width={pdfWidth}
                     renderAnnotationLayer={false}
                     renderTextLayer={true}
-                    onRenderTextLayerSuccess={applyHighlightsToTextLayer}
+                    onRenderTextLayerSuccess={onTextLayerSuccess}
                     onRenderError={(error) => {
                       console.error(`Error rendering page ${i + 1}:`, error);
                     }}
